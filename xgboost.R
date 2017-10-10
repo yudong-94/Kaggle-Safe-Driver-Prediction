@@ -1,8 +1,13 @@
+<<<<<<< HEAD
+setwd("/Users/hzdy1994/Desktop/Kaggle")
+=======
 setwd("~/Desktop/Kaggle")
+>>>>>>> parent of c210cb9... training on whole dataset
 library(xgboost)
 
-train = read.csv("train.csv")
-test = read.csv("test.csv")
+load("train&test.RData")
+#train = read.csv("train.csv")
+#test = read.csv("test.csv")
 
 dim(train)
 # 595k * 59
@@ -264,6 +269,9 @@ colnames(prediction) = c("id", "target")
 write.csv(prediction, "prediction3.csv", row.names = FALSE)
 # 0.279
 
+#######################################################
+# further feature engineering
+
 importance_matrix <- xgb.importance(feature_names = colnames(train2[,c(3:108)]), model = xg_model)
 print(importance_matrix)
 xgb.plot.importance(importance_matrix = importance_matrix)
@@ -337,6 +345,8 @@ mytune <- tuneParams(learner = lrn,
                      show.info = T)
 
 Sys.time()
+# 12.5hr
+# Result: max_depth=5; min_child_weight=5; subsample=0.618; colsample_bytree=0.686 : auc.test.mean=0.64
 
 # train a tunned model
 train2_x = train2[,c(3:90)]
@@ -346,9 +356,9 @@ train2_x = xgb.DMatrix(data = train2_x, label = train2_y)
 test2_x = as.matrix(test2[,c(2:89)])
 
 params <- list(booster = "gbtree", objective = "binary:logistic", 
-               eta=0.01, gamma=0, max_depth=7, 
-               min_child_weight=4.97, subsample=0.607, 
-               colsample_bytree=0.754)
+               eta=0.01, gamma=0, max_depth=5, 
+               min_child_weight=5, subsample=0.618, 
+               colsample_bytree=0.686)
 
 xg_model = xgb.train(params = params,
                      data = train2_x,
@@ -359,7 +369,77 @@ xg_model = xgb.train(params = params,
 pred <- predict(xg_model, test2_x)
 prediction <- data.frame(cbind(test2$id, pred))
 colnames(prediction) = c("id", "target")
-write.csv(prediction, "prediction2.csv", row.names = FALSE)
+write.csv(prediction, "prediction6.csv", row.names = FALSE)
+# 0.274
 
+#######################################################
+# another round (tune max_delta_step)
+importance_matrix <- xgb.importance(feature_names = colnames(train2[,c(3:90)]), model = xg_model)
+print(importance_matrix)
+xgb.plot.importance(importance_matrix = importance_matrix)
+colnames(train2) %in% importance_matrix$Feature
+train2 = train2[,-c(63:90)]
+test2 = test2[-c(63:90)]
 
 #### tune "max_delta_step" (0 to 10)
+lrn <- makeLearner("classif.xgboost", predict.type = "prob")
+lrn$par.vals <- list(booster = "gbtree", 
+                     objective="binary:logistic", 
+                     eval_metric="auc", nrounds=1000L, eta=0.01,
+                     min_child_weight=5, subsample = 0.6)
+
+#set parameter space
+params <- makeParamSet(makeIntegerParam("max_depth",lower = 4L,upper = 8L),
+                       makeNumericParam("colsample_bytree",lower = 0.5,upper = 0.8),
+                       makeNumericParam("max_delta_step",lower = 0,upper = 10))
+#set resampling strategy
+rdesc <- makeResampleDesc("CV", stratify=T, iters=5L)
+#search strategy
+ctrl <- makeTuneControlRandom(maxit = 10L)
+#create task
+train_task_data = train2[,c(2:62)]
+colnames(train_task_data) = gsub("\\.", "", colnames(train_task_data))
+colnames(train_task_data) = gsub("-", "_", colnames(train_task_data))
+traintask <- makeClassifTask(data = train_task_data, target = "target")
+#set parallel backend
+parallelStartSocket(cpus = detectCores() - 1)
+
+#parameter tuning
+Sys.time()
+mytune <- tuneParams(learner = lrn, 
+                     task = traintask, 
+                     resampling = rdesc, 
+                     measures = auc, 
+                     par.set = params, 
+                     control = ctrl, 
+                     show.info = T)
+
+Sys.time()
+
+# train a tunned model
+train2_x = train2[,c(3:62)]
+train2_x = as.matrix(train2_x)
+train2_y = as.vector(train2$target)
+train2_x = xgb.DMatrix(data = train2_x, label = train2_y)
+test2_x = as.matrix(test2[,c(2:61)])
+
+params <- list(booster = "gbtree", objective = "binary:logistic", 
+               eta=0.01, gamma=0, max_depth=5, 
+               min_child_weight=5, subsample=0.618, 
+               colsample_bytree=0.686)
+
+xg_model = xgb.train(params = params,
+                     data = train2_x,
+                     nrounds = 1000,
+                     verbose = 1,
+                     save_name = "xgboost_tunned.model")
+
+pred <- predict(xg_model, test2_x)
+prediction <- data.frame(cbind(test2$id, pred))
+colnames(prediction) = c("id", "target")
+write.csv(prediction, "prediction.csv", row.names = FALSE)
+<<<<<<< HEAD
+# 0.275
+=======
+
+>>>>>>> parent of c210cb9... training on whole dataset
