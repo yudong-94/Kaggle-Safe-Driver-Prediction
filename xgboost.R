@@ -438,8 +438,6 @@ pred <- predict(xg_model, test2_x)
 prediction <- data.frame(cbind(test2$id, pred))
 colnames(prediction) = c("id", "target")
 write.csv(prediction, "prediction.csv", row.names = FALSE)
-<<<<<<< HEAD
-# 0.275
-=======
 
->>>>>>> parent of c210cb9... training on whole dataset
+# 0.275
+
