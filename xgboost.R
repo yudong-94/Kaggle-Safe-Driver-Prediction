@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 setwd("/Users/hzdy1994/Desktop/Kaggle")
-=======
-setwd("~/Desktop/Kaggle")
->>>>>>> parent of c210cb9... training on whole dataset
 library(xgboost)
 
 load("train&test.RData")
