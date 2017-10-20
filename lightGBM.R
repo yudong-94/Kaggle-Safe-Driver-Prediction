@@ -3,63 +3,7 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 
 load("data/train&test.RData")
-
-library(ade4)
-library(data.table)
-ohe_feats = c("ps_ind_02_cat", "ps_ind_04_cat", "ps_ind_05_cat", 
-              "ps_car_01_cat", "ps_car_02_cat", "ps_car_03_cat",
-              "ps_car_04_cat", "ps_car_05_cat", "ps_car_07_cat",
-              "ps_car_06_cat", "ps_car_08_cat", "ps_car_09_cat",
-              "ps_car_10_cat")
-train$ps_ind_02_cat = as.factor(train$ps_ind_02_cat)
-train$ps_ind_04_cat = as.factor(train$ps_ind_04_cat)
-train$ps_ind_05_cat = as.factor(train$ps_ind_05_cat)
-train$ps_car_01_cat = as.factor(train$ps_car_01_cat)
-train$ps_car_02_cat = as.factor(train$ps_car_02_cat)
-train$ps_car_03_cat = as.factor(train$ps_car_03_cat)
-train$ps_car_04_cat = as.factor(train$ps_car_04_cat)
-train$ps_car_05_cat = as.factor(train$ps_car_05_cat)
-train$ps_car_06_cat = as.factor(train$ps_car_06_cat)
-train$ps_car_07_cat = as.factor(train$ps_car_07_cat)
-train$ps_car_08_cat = as.factor(train$ps_car_08_cat)
-train$ps_car_09_cat = as.factor(train$ps_car_09_cat)
-train$ps_car_10_cat = as.factor(train$ps_car_10_cat)
-
-for (f in ohe_feats){
-    train_dummy = acm.disjonctif(train[f])
-    train[f] = NULL
-    train = cbind(train, train_dummy)
-}
-
-colnames(train)
-
-test$ps_ind_02_cat = as.factor(test$ps_ind_02_cat)
-test$ps_ind_04_cat = as.factor(test$ps_ind_04_cat)
-test$ps_ind_05_cat = as.factor(test$ps_ind_05_cat)
-test$ps_car_01_cat = as.factor(test$ps_car_01_cat)
-test$ps_car_02_cat = as.factor(test$ps_car_02_cat)
-test$ps_car_03_cat = as.factor(test$ps_car_03_cat)
-test$ps_car_04_cat = as.factor(test$ps_car_04_cat)
-test$ps_car_05_cat = as.factor(test$ps_car_05_cat)
-test$ps_car_06_cat = as.factor(test$ps_car_06_cat)
-test$ps_car_07_cat = as.factor(test$ps_car_07_cat)
-test$ps_car_08_cat = as.factor(test$ps_car_08_cat)
-test$ps_car_09_cat = as.factor(test$ps_car_09_cat)
-test$ps_car_10_cat = as.factor(test$ps_car_10_cat)
-
-for (f in ohe_feats){
-    test_dummy = acm.disjonctif(test[f])
-    test[f] = NULL
-    test = cbind(test, test_dummy)
-}
-
-rm(test_dummy, train_dummy)
-rm(f, ohe_feats)
-
-colnames(train) = gsub("\\.", "", colnames(train))
-colnames(train) = gsub("-", "_", colnames(train))
-colnames(test) = gsub("\\.", "", colnames(test))
-colnames(test) = gsub("-", "_", colnames(test))
+# or other pre-processed datasets
 
 #############################################################
 # initial training

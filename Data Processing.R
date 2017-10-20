@@ -64,6 +64,9 @@ for (f in categoricals){
     train_test[f] = NULL
 }
 
+rm(i, f, categoricals, newname, perc)
+
+train_test[,48:60] = scale(train_test[,48:60])
 summary(train_test[,48:60])
 
 
