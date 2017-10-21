@@ -59,5 +59,28 @@ colnames(prediction) = c("id", "target")
 write.csv(prediction, "prediction.csv", row.names = FALSE)
 # 0.278
 
-lgb.importance(lgb_model)
+importance = lgb.importance(lgb_model)
+
+
+start = Sys.time()
+param <- list(objective = "binary", 
+              learning_rate = 0.001,
+              num_leaves = 50, 
+              max_depth = 5,
+              min_data_in_leaf = 2000,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 7000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 20)
+Sys.time() - start
+# 0.01: 0.641807, n = 1156
+# 0.005: 0.642777, n = 2857
+# 0.003: 0.642995, n = 3969, 30min
+# 0.001: 0.642033, n = 10730, 1.5hr
+
 
