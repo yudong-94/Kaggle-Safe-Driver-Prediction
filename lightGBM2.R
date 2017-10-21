@@ -37,22 +37,27 @@ cv = lgb.cv(param,
             verbose = 1,
             early_stopping_rounds = 20)
 Sys.time() - start
-
+# 9.4min
+# auc = 0.641807, gini = 0.283614
 
 # training
 start = Sys.time()
 lgb_model <- lgb.train(data = dlgb_train, 
                        objective = "binary", 
                        learning_rate = 0.01,
-                       nrounds = 1000, 
-                       num_leaves = 1024, 
-                       max_depth = 8,
-                       nthread = 2)
+                       nrounds = 1156, 
+                       num_leaves = 50, 
+                       max_depth = 5,
+                       min_data_in_leaf = 2000,
+                       num_threads = 3)
 Sys.time() - start
-
+# 1.8min
 
 pred <- predict(lgb_model, test_matrix)
 prediction <- data.frame(cbind(test$id, pred))
 colnames(prediction) = c("id", "target")
 write.csv(prediction, "prediction.csv", row.names = FALSE)
+# 0.278
+
+lgb.importance(lgb_model)
 
