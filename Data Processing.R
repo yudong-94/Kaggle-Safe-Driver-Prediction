@@ -1,6 +1,10 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 
-load("data/train&test.RData")
+train = read.csv("data/train.csv")
+test = read.csv("data/test.csv")
+
+library(stringr)
+library(dplyr)
 
 test$target = 0
 test$data = "test"
@@ -10,14 +14,28 @@ train = train[, c(1, 60, 2:59)]
     
 train_test = rbind(train, test)
 
+# transfer those -1 to NA
+categoricals = c("ps_ind_02_cat", "ps_ind_04_cat", "ps_ind_05_cat", 
+                 "ps_car_01_cat", "ps_car_02_cat", "ps_car_03_cat",
+                 "ps_car_04_cat", "ps_car_05_cat", "ps_car_07_cat",
+                 "ps_car_06_cat", "ps_car_08_cat", "ps_car_09_cat",
+                 "ps_car_10_cat", "ps_car_11_cat")
+
+for (f in categoricals){
+    train_test[train_test[f] == -1, f] = NA
+}
+
+rm(f, categoricals)
+
+# save.image("~/Desktop/Kaggle/data/train&test.RData")
+
+###########################################
+# One-hot-Coding
 categoricals = c("ps_ind_02_cat", "ps_ind_04_cat", "ps_ind_05_cat", 
                  "ps_car_01_cat", "ps_car_02_cat", "ps_car_03_cat",
                  "ps_car_04_cat", "ps_car_05_cat", "ps_car_07_cat",
                  "ps_car_06_cat", "ps_car_08_cat", "ps_car_09_cat",
                  "ps_car_10_cat")
-
-###########################################
-# One-hot-Coding
 
 train_test$ps_ind_02_cat = as.factor(train_test$ps_ind_02_cat)
 train_test$ps_ind_04_cat = as.factor(train_test$ps_ind_04_cat)
@@ -45,11 +63,18 @@ for (f in categoricals){
 rm(dummy, f, categoricals)
 
 colnames(train_test) = gsub("\\.", "", colnames(train_test))
-colnames(train_test) = gsub("-", "_", colnames(train_test))
 colnames(train_test)
+
+# save.image("~/Desktop/Kaggle/data/one-hot-coding.RData")
 
 ###########################################
 # Likelihood Coding
+
+categoricals = c("ps_ind_02_cat", "ps_ind_04_cat", "ps_ind_05_cat", 
+                 "ps_car_01_cat", "ps_car_02_cat", "ps_car_03_cat",
+                 "ps_car_04_cat", "ps_car_05_cat", "ps_car_07_cat",
+                 "ps_car_06_cat", "ps_car_08_cat", "ps_car_09_cat",
+                 "ps_car_10_cat", "ps_car_11_cat")
 
 for (f in categoricals){
     
@@ -57,8 +82,10 @@ for (f in categoricals){
     train_test[newname] = NA
     
     for (i in unique(train_test[f][,1])) {
-        perc = sum(train[train[f] == i, ]$target) / nrow(train[train[f] == i, ])
-        train_test[train_test[f] == i, newname] = perc
+        if (!is.na(i)) {
+            perc = sum(train[train[f] == i, ]$target) / nrow(train[train[f] == i, ])
+            train_test[train_test[f] == i & !is.na(train_test[f]), newname] = perc
+        }
     }
     
     train_test[f] = NULL
@@ -66,7 +93,5 @@ for (f in categoricals){
 
 rm(i, f, categoricals, newname, perc)
 
-train_test[,48:60] = scale(train_test[,48:60])
-summary(train_test[,48:60])
-
+# save.image("~/Desktop/Kaggle/data/likelihood-coding.RData")
 

@@ -2,7 +2,8 @@
 # one hot code of categorical variables
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 
-load("data/train&test.RData")
+train = read.csv("data/train.csv")
+test = read.csv("data/test.csv")
 # or other pre-processed datasets
 
 #############################################################
@@ -94,7 +95,7 @@ for (num_leaves in seq(30, 60, 10)) {
     }
 }
 
-# 2:30pm
+
 
 
 # training the data with tunned parameters

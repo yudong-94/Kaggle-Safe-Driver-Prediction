@@ -1,7 +1,7 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 library(xgboost)
 
-load("train&test.RData")
+load("data/train&test.RData")
 #train = read.csv("train.csv")
 #test = read.csv("test.csv")
 
