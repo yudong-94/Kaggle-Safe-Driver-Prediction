@@ -3,6 +3,8 @@ load("data/likelihood-coding.RData")
 
 library(stringr)
 library(dplyr)
+library(ggplot2)
+library(reshape2)
 
 ###########################################
 # New variables
@@ -32,6 +34,7 @@ train_test = merge(train_test, avg,
                    by = "ps_ind_01")
 train_test$avg_car13_on_ind01 = train_test$ps_car_13 / train_test$avg
 train_test$avg = NULL
+train_test$avg_car13_on_ind01 = scale(train_test$avg_car13_on_ind01)
 
 avg = train_test %>%
     filter(!is.na(ps_ind_02_catnew)) %>%
@@ -245,70 +248,50 @@ train_test = train_test[, c(22:24, 1:21, 25:81)]
 
 ###########################################
 # feature selection - avoid the great variance caused by multicollinearity
-library(fmsb)
 
-vif_func<-function(in_frame,thresh=10,trace=T,...){
+# remove all the calc features
+train_test = train_test[,-(31:50)]
 
-    
-    if(class(in_frame) != 'data.frame') in_frame<-data.frame(in_frame)
-    
-    #get initial vif value for all comparisons of variables
-    vif_init<-NULL
-    var_names <- names(in_frame)
-    for(val in var_names){
-        regressors <- var_names[-which(var_names == val)]
-        form <- paste(regressors, collapse = '+')
-        form_in <- formula(paste(val, '~', form))
-        vif_init<-rbind(vif_init, c(val, VIF(lm(form_in, data = in_frame, ...))))
-    }
-    vif_max<-max(as.numeric(vif_init[,2]), na.rm = TRUE)
-    
-    if(vif_max < thresh){
-        if(trace==T){ #print output of each iteration
-            prmatrix(vif_init,collab=c('var','vif'),rowlab=rep('',nrow(vif_init)),quote=F)
-            cat('\n')
-            cat(paste('All variables have VIF < ', thresh,', max VIF ',round(vif_max,2), sep=''),'\n\n')
-        }
-        return(var_names)
-    }
-    else{
-        
-        in_dat<-in_frame
-        
-        #backwards selection of explanatory variables, stops when all VIF values are below 'thresh'
-        while(vif_max >= thresh){
-            
-            vif_vals<-NULL
-            var_names <- names(in_dat)
-            
-            for(val in var_names){
-                regressors <- var_names[-which(var_names == val)]
-                form <- paste(regressors, collapse = '+')
-                form_in <- formula(paste(val, '~', form))
-                vif_add<-VIF(lm(form_in, data = in_dat, ...))
-                vif_vals<-rbind(vif_vals,c(val,vif_add))
-            }
-            max_row<-which(vif_vals[,2] == max(as.numeric(vif_vals[,2]), na.rm = TRUE))[1]
-            
-            vif_max<-as.numeric(vif_vals[max_row,2])
-            
-            if(vif_max<thresh) break
-            
-            if(trace==T){ #print output of each iteration
-                prmatrix(vif_vals,collab=c('var','vif'),rowlab=rep('',nrow(vif_vals)),quote=F)
-                cat('\n')
-                cat('removed: ',vif_vals[max_row,1],vif_max,'\n\n')
-                flush.console()
-            }
-            
-            in_dat<-in_dat[,!names(in_dat) %in% vif_vals[max_row,1]]
-            
-        }
-        
-        return(names(in_dat))
-        
-    }
-    
-}
+cormat = round(cor(train_test[,c(3:61)]),2)
+head(cormat)
 
-col_vif = vif_func(in_frame = train_test[,c(4:61)])
+melted_cormat = melt(cormat)
+head(melted_cormat)
+
+# correlation heatmap
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile()
+
+melted_cormat = melted_cormat %>%
+    filter(Var1 != Var2) %>%
+    arrange(-value)
+
+train_test$ps_ind_12_bin = NULL
+
+train_test$avg_car13_on_ind08 = NULL
+train_test$avg_car13_on_ind09 = NULL
+train_test$avg_car13_on_ind10 = NULL
+train_test$avg_car13_on_ind11 = NULL
+train_test$avg_car13_on_ind12 = NULL
+train_test$avg_car13_on_ind13 = NULL
+train_test$avg_car13_on_ind14 = NULL
+train_test$avg_car13_on_ind15 = NULL
+train_test$avg_car13_on_ind16 = NULL
+train_test$avg_car13_on_ind17 = NULL
+train_test$avg_car13_on_ind18 = NULL
+train_test$avg_car13_on_reg01 = NULL
+
+train_test$avg_car13_on_ind01 = NULL
+train_test$avg_car13_on_ind03 = NULL
+train_test$avg_car13_on_reg02 = NULL
+train_test$avg_car13_on_ind06 = NULL
+train_test$avg_car13_on_ind07 = NULL
+
+
+cormat = round(cor(train_test[,c(3:43)]),2)
+melted_cormat = melt(cormat)
+melted_cormat = melted_cormat %>%
+    filter(Var1 != Var2) %>%
+    arrange(-value)
+
+save.image("~/Desktop/Kaggle/data/new_feature_no_corr.RData")
