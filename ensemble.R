@@ -1,5 +1,4 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
-library(dplyr)
 
 lightgbm_1 = read.csv("data/lightgbm1.csv")
 lightgbm_2 = read.csv("data/lightgbm2.csv")
@@ -22,4 +21,10 @@ ensembled[, "target"] = apply(ensembled[, 2:6], 1, max)
 write.csv(ensembled[,c(1,7)], "prediction.csv", row.names = FALSE)
 # 0.281
 
+# set target as Harmonic mean
+ensembled$target = 1/((1/ensembled$lightgbm_1 + 1/ensembled$lightgbm_2 + 1/ensembled$lightgbm_3 + 1/ensembled$xgboost_1 + 1/ensembled$xgboost_2)/5)
+write.csv(ensembled[,c(1,7)], "prediction.csv", row.names = FALSE)
+# 0.282
+
+# run a logistic regression to ensemble
 

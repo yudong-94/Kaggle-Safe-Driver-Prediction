@@ -1,9 +1,8 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 library(xgboost)
 
-load("data/train&test.RData")
-#train = read.csv("train.csv")
-#test = read.csv("test.csv")
+train = read.csv("train.csv")
+test = read.csv("test.csv")
 
 dim(train)
 # 595k * 59
