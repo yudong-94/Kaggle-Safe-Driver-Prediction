@@ -52,3 +52,4 @@ write.csv(prediction, "prediction.csv", row.names = FALSE)
 
 importance = xgb.importance(feature_names = colnames(train[,c(3:42)]), model = xg_model)
 write.csv(importance, "importance3.csv", row.names = FALSE)
+
