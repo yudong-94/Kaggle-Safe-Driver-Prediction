@@ -140,3 +140,59 @@ write.csv(prediction, "prediction.csv", row.names = FALSE)
 importance = lgb.importance(lgb_model)
 write.csv(importance, "importance2.csv", row.names = FALSE)
 
+
+# with the dataset with more features
+load("data/new_feature_no_corr2.RData")
+
+train_test[is.na(train_test)] = -1
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:45)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:45)])
+
+start = Sys.time()
+param <- list(objective = "binary", 
+              learning_rate = 0.0025,
+              num_leaves = 50, 
+              max_depth = 5,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 50,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 20)
+Sys.time() - start
+
+
+# training
+start = Sys.time()
+lgb_model <- lgb.train(data = dlgb_train, 
+                       objective = "binary", 
+                       learning_rate = 0.0025,
+                       nrounds = 5811,
+                       num_leaves = 50, 
+                       max_depth = 5,
+                       min_data_in_leaf = 2000,
+                       min_sum_hessian_in_leaf = 50,
+                       num_threads = 3)
+Sys.time() - start
+
+
+pred <- predict(lgb_model, test_matrix)
+prediction <- data.frame(cbind(test$id, pred))
+colnames(prediction) = c("id", "target")
+write.csv(prediction, "prediction.csv", row.names = FALSE)
+
+
+importance = lgb.importance(lgb_model)
+write.csv(importance, "importance.csv", row.names = FALSE)
+
+

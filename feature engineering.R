@@ -15,13 +15,6 @@ train_test %>% group_by(ps_ind_05_catnew) %>% summarise(avg = sum(ps_car_13) / n
 train_test %>% group_by(ps_ind_13_bin) %>% summarise(avg = sum(ps_car_13) / n())
 train_test %>% group_by(ps_reg_03) %>% summarise(avg = sum(ps_car_13) / n())
 
-
-# ps_car_13 / ps_car_15: mileage / age
-train_test$car13_car15 = train_test$ps_car_13 / train_test$ps_car_15
-
-# ps_car_14 / ps_car_13: previous claims / mileage
-train_test$car14_car13 = train_test$ps_car_14 / train_test$ps_car_13
-
 # ps_car_13 over the group average on all ps_ind_xx: 
 # how much the mileage is deviated from average of the client group
 
@@ -295,3 +288,126 @@ melted_cormat = melted_cormat %>%
     arrange(-value)
 
 save.image("~/Desktop/Kaggle/data/new_feature_no_corr.RData")
+
+###########################################
+# exclude those seems useless for lightgbm
+# add new features grouped on car features
+
+train_test$ps_ind_10_bin = NULL
+train_test$ps_ind_11_bin = NULL
+train_test$ps_ind_13_bin = NULL
+
+
+# ps_car_13 / ps_car_15: mileage / age
+train_test$car13_car15 = train_test$ps_car_13 / train_test$ps_car_15
+
+# ps_car_14 / ps_car_13: previous claims / mileage
+train_test$car14_car13 = train_test$ps_car_14 / train_test$ps_car_13
+
+# ps_car_13 over the group average on all ps_car_xx_cat: 
+# how much the mileage is deviated from average of the car
+
+avg = train_test %>%
+    filter(!is.na(ps_car_01_catnew)) %>%
+    group_by(ps_car_01_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_01_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car01 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_02_catnew)) %>%
+    group_by(ps_car_02_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_02_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car02 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_04_catnew)) %>%
+    group_by(ps_car_04_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_04_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car04 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_06_catnew)) %>%
+    group_by(ps_car_06_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_06_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car06 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_07_catnew)) %>%
+    group_by(ps_car_07_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_07_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car07 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_08_catnew)) %>%
+    group_by(ps_car_08_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_08_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car08 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_09_catnew)) %>%
+    group_by(ps_car_09_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_09_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car09 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+avg = train_test %>%
+    filter(!is.na(ps_car_10_catnew)) %>%
+    group_by(ps_car_10_catnew) %>%
+    summarise(avg = sum(ps_car_13) / n())
+train_test = merge(train_test, avg,
+                   by = "ps_car_10_catnew",
+                   all.x = TRUE)
+train_test$avg_car13_on_car10 = train_test$ps_car_13 / train_test$avg
+train_test$avg = NULL
+
+
+# check correlations
+train_test = train_test[,c(9:11, 1:8, 12:50)]
+colnames(train_test)
+summary(train_test[,41:50])
+
+cormat = round(cor(train_test[,c(3:50)]),2)
+melted_cormat = melt(cormat)
+melted_cormat = melted_cormat %>%
+    filter(Var1 != Var2) %>%
+    arrange(-value)
+
+train_test$avg_car13_on_car10 = NULL
+train_test$car14_car13 = NULL
+train_test$avg_car13_on_car08 = NULL
+train_test$avg_car13_on_car06 = NULL
+
+cormat = round(cor(train_test[,c(3:46)]),2)
+melted_cormat = melt(cormat)
+melted_cormat = melted_cormat %>%
+    filter(Var1 != Var2) %>%
+    arrange(-value)
+
+save.image("~/Desktop/Kaggle/data/new_feature_no_corr2.RData")
