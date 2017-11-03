@@ -1,5 +1,6 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 load("data/likelihood-coding.RData")
+# load("data/one-hot-coding.RData")
 
 library(stringr)
 library(dplyr)
@@ -27,7 +28,6 @@ train_test = merge(train_test, avg,
                    by = "ps_ind_01")
 train_test$avg_car13_on_ind01 = train_test$ps_car_13 / train_test$avg
 train_test$avg = NULL
-train_test$avg_car13_on_ind01 = scale(train_test$avg_car13_on_ind01)
 
 avg = train_test %>%
     filter(!is.na(ps_ind_02_catnew)) %>%
@@ -411,3 +411,10 @@ melted_cormat = melted_cormat %>%
     arrange(-value)
 
 save.image("~/Desktop/Kaggle/data/new_feature_no_corr2.RData")
+
+
+###########################################
+# All features have been created + impact encoding: "impact_encoding_ver.RData"
+# All features have been created + one-hot-encoding: "one_hot_encoding_ver.RData"
+
+
