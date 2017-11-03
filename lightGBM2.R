@@ -209,3 +209,65 @@ pred <- predict(lgb_model, train_matrix)
 prediction <- data.frame(cbind(train$id, pred, train$target))
 colnames(prediction) = c("id", "pred", "target")
 write.csv(prediction, "prediction_train_lightgbm4.csv", row.names = FALSE)
+
+
+########################
+# train with the same set of new features with one-hot-coding
+
+load("data/one_hot_encoding_ver.RData")
+
+train_test = train_test3
+rm(train_test3)
+
+train_test$avg_car13_on_car10 = NULL
+train_test$car14_car13 = NULL
+train_test$avg_car13_on_car08 = NULL
+train_test$avg_car13_on_car06 = NULL
+train_test$ps_ind_12_bin = NULL
+train_test$avg_car13_on_ind08 = NULL
+train_test$avg_car13_on_ind09 = NULL
+train_test$avg_car13_on_ind10 = NULL
+train_test$avg_car13_on_ind11 = NULL
+train_test$avg_car13_on_ind12 = NULL
+train_test$avg_car13_on_ind13 = NULL
+train_test$avg_car13_on_ind14 = NULL
+train_test$avg_car13_on_ind15 = NULL
+train_test$avg_car13_on_ind16 = NULL
+train_test$avg_car13_on_ind17 = NULL
+train_test$avg_car13_on_ind18 = NULL
+train_test$avg_car13_on_reg01 = NULL
+train_test$avg_car13_on_ind01 = NULL
+train_test$avg_car13_on_ind03 = NULL
+train_test$avg_car13_on_reg02 = NULL
+train_test$avg_car13_on_ind06 = NULL
+train_test$avg_car13_on_ind07 = NULL
+
+train_test[is.na(train_test)] = -1
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:147)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:147)])
+
+# cv
+start = Sys.time()
+param <- list(objective = "binary", 
+              learning_rate = 0.002,
+              num_leaves = 30, 
+              max_depth = 4,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 50,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 50)
+Sys.time() - start
+# stuch around 0.6406 - not as good as impact encoding
+
