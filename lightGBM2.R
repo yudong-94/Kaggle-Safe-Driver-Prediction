@@ -140,7 +140,7 @@ write.csv(prediction, "prediction.csv", row.names = FALSE)
 importance = lgb.importance(lgb_model)
 write.csv(importance, "importance2.csv", row.names = FALSE)
 
-
+########################
 # with the dataset with more features
 load("data/new_feature_no_corr2.RData")
 
@@ -219,6 +219,9 @@ load("data/one_hot_encoding_ver.RData")
 train_test = train_test3
 rm(train_test3)
 
+train_test$ps_ind_10_bin = NULL
+train_test$ps_ind_11_bin = NULL
+train_test$ps_ind_13_bin = NULL
 train_test$avg_car13_on_car10 = NULL
 train_test$car14_car13 = NULL
 train_test$avg_car13_on_car08 = NULL
@@ -269,5 +272,38 @@ cv = lgb.cv(param,
             verbose = 1,
             early_stopping_rounds = 50)
 Sys.time() - start
-# stuch around 0.6406 - not as good as impact encoding
+# stuck around 0.6406 - not as good as impact encoding
+
+
+########################
+#train with 3rd phase new features
+
+load("data/new_feature_no_corr3.RData")
+
+train_test[is.na(train_test)] = -1
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:51)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:51)])
+
+start = Sys.time()
+param <- list(objective = "binary", 
+              learning_rate = 0.0025,
+              num_leaves = 25, 
+              max_depth = 4,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 50,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 50)
+Sys.time() - start
 
