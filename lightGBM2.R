@@ -307,3 +307,74 @@ cv = lgb.cv(param,
             early_stopping_rounds = 50)
 Sys.time() - start
 
+# n = 5508, auc = 0.642151, 0.2843
+# lb = 0.279
+
+cv_tunning = data.frame(num_leaves = numeric(0), 
+                        max_depth = numeric(0),
+                        min_data_in_leaf = numeric(0),
+                        best_itr = numeric(0), 
+                        best_gini = numeric(0))
+
+for (n_leaves in c(25, 35, 50)) {
+    for (max_depth in c(4, 5)) {
+        for (min_leaf in c(2000, 2500)) {
+            param <- list(objective = "binary", 
+                          learning_rate = 0.0025,
+                          num_leaves = n_leaves, 
+                          max_depth = max_depth,
+                          min_data_in_leaf = min_leaf,
+                          min_sum_hessian_in_leaf = 50,
+                          num_threads = 3)
+            
+            cv = lgb.cv(param,
+                        dlgb_train,
+                        nrounds = 10000,
+                        nfold = 5,
+                        eval = "auc",
+                        verbose = 1,
+                        early_stopping_rounds = 50)
+            
+            cv_tunning[nrow(cv_tunning)+1, ] = c(n_leaves, 
+                                                 max_depth,
+                                                 min_leaf,
+                                                 cv$best_iter, 
+                                                 cv$best_score)
+            write.csv(cv_tunning, "tunning.csv", row.names = FALSE)
+        }
+    }
+}
+# best: 50, 4, 2000: n = 7578, auc = 0.6426
+
+# training
+start = Sys.time()
+lgb_model <- lgb.train(data = dlgb_train, 
+                       objective = "binary", 
+                       learning_rate = 0.0025,
+                       nrounds = 7578,
+                       num_leaves = 50, 
+                       max_depth = 4,
+                       min_data_in_leaf = 2000,
+                       min_sum_hessian_in_leaf = 50,
+                       num_threads = 3)
+Sys.time() - start
+# 7 min
+
+
+pred <- predict(lgb_model, test_matrix)
+prediction <- data.frame(cbind(test$id, pred))
+colnames(prediction) = c("id", "target")
+write.csv(prediction, "prediction.csv", row.names = FALSE)
+# test gini = 0.2852
+# 
+
+importance = lgb.importance(lgb_model)
+write.csv(importance, "importance.csv", row.names = FALSE)
+
+# save the predictions for the training set
+pred <- predict(lgb_model, train_matrix)
+prediction <- data.frame(cbind(train$id, pred, train$target))
+colnames(prediction) = c("id", "pred", "target")
+write.csv(prediction, "lightgbm5_train.csv", row.names = FALSE)
+
+
