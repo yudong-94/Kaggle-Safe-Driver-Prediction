@@ -7,7 +7,7 @@ lightgbm_4 = read.csv("data/lightgbm4.csv")
 lightgbm_5 = read.csv("data/lightgbm5.csv")
 xgboost_1 = read.csv("data/xgboost1.csv")
 xgboost_2 = read.csv("data/xgboost2.csv")
-kernel = read.csv("data/kernel_0.285.csv")
+# kernel = read.csv("data/kernel_0.285.csv")
 
 # Bind all the target columns together
 ensembled = cbind(lightgbm_1, lightgbm_2, lightgbm_3, lightgbm_4, lightgbm_5, xgboost_1, xgboost_2)
@@ -44,14 +44,17 @@ kernel_3 = read.csv("kernel/Kinetics_0.282.csv")
 kernel_4 = read.csv("kernel/xgb_0.283.csv")
 kernel_5 = read.csv("kernel/xgb_0.284.csv")
 kernel_6 = read.csv("kernel/xgb_0.284_2.csv")
+kernel_7 = read.csv("kernel/cat_0.281.csv")
+kernel_8 = read.csv("kernel/lgbm_0.283.csv")
 
-ensembled = cbind(ensembled[,c(1,4:8)], kernel_1, kernel_2, kernel_3, kernel_4, kernel_5, kernel_6)
-ensembled = ensembled[,c(1:6,8,10,12,14,16,18)]
+
+ensembled = cbind(ensembled[,c(1,5:8)], kernel_1, kernel_2, kernel_3, kernel_4, kernel_5, kernel_6, kernel_7, kernel_8)
+ensembled = ensembled[,c(1:5,7,9,11,13,15,17,19,21)]
 
 data.rank<-as.data.frame(sapply(ensembled,rank))
 median.rank<-apply(data.rank,1,median)
 id = ensembled$id
 df.median.rank<-data.frame(id=id,target=median.rank/length(median.rank))
 
-
-write.csv(df.median.rank, 'median_rank_submission3.csv', row.names = FALSE)
+write.csv(df.median.rank, 'median_rank_submission4.csv', row.names = FALSE)
+# 0.285
