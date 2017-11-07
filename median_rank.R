@@ -58,3 +58,15 @@ df.median.rank<-data.frame(id=id,target=median.rank/length(median.rank))
 
 write.csv(df.median.rank, 'median_rank_submission4.csv', row.names = FALSE)
 # 0.285
+
+# what if remove the dnn model in the ensembling
+ensembled = cbind(ensembled[,c(1,5:8)], kernel_2, kernel_3, kernel_4, kernel_5, kernel_6, kernel_7, kernel_8)
+ensembled = ensembled[,c(1:5,7,9,11,13,15,17,19)]
+
+data.rank<-as.data.frame(sapply(ensembled,rank))
+median.rank<-apply(data.rank,1,median)
+id = ensembled$id
+df.median.rank<-data.frame(id=id,target=median.rank/length(median.rank))
+
+write.csv(df.median.rank, 'median_rank_submission5.csv', row.names = FALSE)
+# dropped a little bit, but still 0.285
