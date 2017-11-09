@@ -620,4 +620,28 @@ train_test$ind03_and_car11 = NULL
 
 save.image("~/Desktop/Kaggle/data/new_feature_no_corr3.RData")
 
+############################ 
+load("data/new_feature_no_corr3.RData")
+
+# input missing values with median
+for (col in colnames(train_test)) {
+    if (anyNA(train_test[,col])) {
+        median_col = median(na.omit(train_test[,col]))
+        train_test[is.na(train_test[,col]),col] = median_col
+    }
+}
+
+rm(col, median_col)
+
+# handle the Inf in car13_car15
+max(train_test$car13_car15[!is.infinite(train_test$car13_car15)])
+# 1.7
+# change all Inf to 2
+train_test[is.infinite(train_test$car13_car15),"car13_car15"] = 2.0
+
+# normalize all numeric variables
+train_test[,c(4:52)] = scale(train_test[,c(4:52)])
+summary(train_test)
+
+save.image("~/Desktop/Kaggle/data/new_feature_normalized.RData")
 

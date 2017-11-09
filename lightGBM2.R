@@ -1,6 +1,6 @@
 setwd("/Users/hzdy1994/Desktop/Kaggle")
 
-library(parallel)
+#library(parallel)
 library(Matrix)
 library(lightgbm)
 
@@ -81,7 +81,7 @@ Sys.time() - start
 # 0.001: 0.642033, n = 10730, 1.5hr
 
 
-
+#########################
 # with the dataset excluding multicollinearity
 load("data/new_feature_no_corr.RData")
 
@@ -346,27 +346,55 @@ for (n_leaves in c(25, 35, 50)) {
 }
 # best: 50, 4, 2000: n = 7578, auc = 0.6426
 
+cv_tunning = data.frame(min_hessian = numeric(0), 
+                        best_itr = numeric(0), 
+                        best_gini = numeric(0))
+
+for (min_hessian in c(25, 50, 75, 100, 125, 150)) {
+            param <- list(objective = "binary", 
+                          learning_rate = 0.0025,
+                          num_leaves = 50, 
+                          max_depth = 4,
+                          min_data_in_leaf = 2000,
+                          min_sum_hessian_in_leaf = min_hessian,
+                          num_threads = 3)
+            
+            cv = lgb.cv(param,
+                        dlgb_train,
+                        nrounds = 10000,
+                        nfold = 5,
+                        eval = "auc",
+                        verbose = 1,
+                        early_stopping_rounds = 50)
+            
+            cv_tunning[nrow(cv_tunning)+1, ] = c(min_hessian,
+                                                 cv$best_iter, 
+                                                 cv$best_score)
+            write.csv(cv_tunning, "tunning.csv", row.names = FALSE)
+}
+# best: 125, 0.6428838
+
+
 # training
 start = Sys.time()
 lgb_model <- lgb.train(data = dlgb_train, 
                        objective = "binary", 
                        learning_rate = 0.0025,
-                       nrounds = 7578,
+                       nrounds = 7730,
                        num_leaves = 50, 
                        max_depth = 4,
                        min_data_in_leaf = 2000,
-                       min_sum_hessian_in_leaf = 50,
+                       min_sum_hessian_in_leaf = 125,
                        num_threads = 3)
 Sys.time() - start
 # 7 min
-
 
 pred <- predict(lgb_model, test_matrix)
 prediction <- data.frame(cbind(test$id, pred))
 colnames(prediction) = c("id", "target")
 write.csv(prediction, "prediction.csv", row.names = FALSE)
-# test gini = 0.2852
-# 
+# test gini = 0.2857
+# public lb = 0.280
 
 importance = lgb.importance(lgb_model)
 write.csv(importance, "importance.csv", row.names = FALSE)
@@ -375,6 +403,93 @@ write.csv(importance, "importance.csv", row.names = FALSE)
 pred <- predict(lgb_model, train_matrix)
 prediction <- data.frame(cbind(train$id, pred, train$target))
 colnames(prediction) = c("id", "pred", "target")
-write.csv(prediction, "lightgbm5_train.csv", row.names = FALSE)
+write.csv(prediction, "lightgbm6_train.csv", row.names = FALSE)
+
+####################################
+# try to figure out the overfitting feature
+
+load("data/new_feature_no_corr2.RData")
+
+# suspects: avg_car13_on_car04
+
+train_test$avg_car13_on_car04 = NULL
+
+train_test[is.na(train_test)] = -1
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:44)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:44)])
+
+start = Sys.time()
+param <- list(objective = "binary", 
+              learning_rate = 0.0025,
+              num_leaves = 30, 
+              max_depth = 4,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 50,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 20)
+Sys.time() - start
+
+# before getting rid of the feature: 0.642553
+# after: 0.6419
+
+#################################
+# training with the normalized and missing value imputed data
+load("data/new_feature_normalized.RData")
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:51)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:51)])
+
+cv_tunning = data.frame(num_leaves = numeric(0), 
+                        min_hessian = numeric(0),
+                        min_data_in_leaf = numeric(0),
+                        best_itr = numeric(0), 
+                        best_gini = numeric(0))
+
+for (n_leaves in c(30, 50)) {
+    for (min_hessian in c(50, 100, 150)) {
+        for (min_leaf in c(1500, 2000, 2500)) {
+            param <- list(objective = "binary", 
+                          learning_rate = 0.0025,
+                          num_leaves = n_leaves, 
+                          max_depth = 4,
+                          min_data_in_leaf = min_leaf,
+                          min_sum_hessian_in_leaf = min_hessian,
+                          num_threads = 3)
+            
+            cv = lgb.cv(param,
+                        dlgb_train,
+                        nrounds = 10000,
+                        nfold = 5,
+                        eval = "auc",
+                        verbose = 1,
+                        early_stopping_rounds = 50)
+            
+            cv_tunning[nrow(cv_tunning)+1, ] = c(n_leaves, 
+                                                 min_hessian,
+                                                 min_leaf,
+                                                 cv$best_iter, 
+                                                 cv$best_score)
+            write.csv(cv_tunning, "tunning.csv", row.names = FALSE)
+        }
+    }
+}
+
+
 
 
