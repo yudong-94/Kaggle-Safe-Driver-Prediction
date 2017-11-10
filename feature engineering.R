@@ -652,4 +652,41 @@ train_test[is.infinite(train_test$car13_car15),"car13_car15"] = 2.0
 train_test[,c(4:52)] = scale(train_test[,c(4:52)])
 
 
+############################ 
+load("data/new_feature_no_corr3.RData")
+
+train = train_test[train_test$data == "train", -2]
+
+# use reg_01 and reg_02 as categorical variables: impact-encoding them
+
+categoricals = c("ps_reg_01", "ps_reg_02")
+
+for (f in categoricals){
+    
+    newname = paste0(f,"new")
+    train_test[newname] = NA
+    
+    for (i in unique(train_test[f][,1])) {
+        if (!is.na(i)) {
+            perc = sum(train[train[f] == i, ]$target) / nrow(train[train[f] == i, ])
+            train_test[train_test[f] == i & !is.na(train_test[f]), newname] = perc
+        }
+    }
+    
+    train_test[f] = NULL
+}
+
+rm(i, f, categoricals, newname, perc, train)
+
+train_test$reg01_reg02 = train_test$ps_reg_01new * train_test$ps_reg_02new
+
+# remove the not important features in lightGBM
+train_test$ps_car_02_catnew = NULL
+
+# check correlation
+cormat = round(cor(train_test[,c(3:52)]),2)
+melted_cormat = melt(cormat)
+melted_cormat = melted_cormat %>%
+    filter(Var1 != Var2) %>%
+    arrange(-value)
 

@@ -562,4 +562,48 @@ cv = lgb.cv(param,
 # before missing value imputation: 0.6428838
 # after: 0.641624
 
+#################################
+# new feature set 4 - added categorical regs
+load("data/new_feature_4.RData")
+
+train_test[is.na(train_test)] = -1
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:51)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:51)])
+
+cv_tunning = data.frame(num_leaves = numeric(0), 
+                        min_hessian = numeric(0),
+                        best_itr = numeric(0), 
+                        best_gini = numeric(0))
+
+for (n_leaves in c(25, 50)) {
+    for (min_hessian in c(50, 100, 125)) {
+            param <- list(objective = "binary", 
+                          learning_rate = 0.0025,
+                          num_leaves = n_leaves, 
+                          max_depth = 4,
+                          min_data_in_leaf = 2000,
+                          min_sum_hessian_in_leaf = min_hessian,
+                          num_threads = 3)
+            
+            cv = lgb.cv(param,
+                        dlgb_train,
+                        nrounds = 10000,
+                        nfold = 5,
+                        eval = "auc",
+                        verbose = 1,
+                        early_stopping_rounds = 50)
+            
+            cv_tunning[nrow(cv_tunning)+1, ] = c(n_leaves, 
+                                                 min_hessian,
+                                                 min_leaf,
+                                                 cv$best_iter, 
+                                                 cv$best_score)
+            write.csv(cv_tunning, "tunning.csv", row.names = FALSE)
+    }
+}
 
