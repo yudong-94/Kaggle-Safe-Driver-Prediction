@@ -645,3 +645,11 @@ summary(train_test)
 
 save.image("~/Desktop/Kaggle/data/new_feature_normalized.RData")
 
+# normalization only, impute missing values with -1
+load("data/new_feature_no_corr3.RData")
+train_test[is.na(train_test)] = -1
+train_test[is.infinite(train_test$car13_car15),"car13_car15"] = 2.0
+train_test[,c(4:52)] = scale(train_test[,c(4:52)])
+
+
+

@@ -490,6 +490,76 @@ for (n_leaves in c(30, 50)) {
     }
 }
 
+# not good.. best only 0.6423
 
+# what if only normalization, no missing value imputation?
+load("data/new_feature_no_corr3.RData")
+train_test[is.na(train_test)] = -1
+train_test[is.infinite(train_test$car13_car15),"car13_car15"] = 2.0
+train_test[,c(4:52)] = scale(train_test[,c(4:52)])
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:51)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:51)])
+
+param <- list(objective = "binary", 
+              learning_rate = 0.0025,
+              num_leaves = 50, 
+              max_depth = 4,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 125,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 50)
+
+# before normalization: 0.6428838
+# after: 0.641625
+
+# what if missing value imputation only, but not normalization?
+load("data/new_feature_no_corr3.RData")
+
+# input missing values with median
+for (col in colnames(train_test)) {
+    if (anyNA(train_test[,col])) {
+        median_col = median(na.omit(train_test[,col]))
+        train_test[is.na(train_test[,col]),col] = median_col
+    }
+}
+
+train = train_test[train_test$data == "train", -2]
+test = train_test[train_test$data != "train", -2]
+
+train_matrix = sparse.model.matrix(target ~ .-1, data = train[, c(2:51)])
+dlgb_train = lgb.Dataset(data = train_matrix, label = train$target)
+test_matrix = as.matrix(test[,c(3:51)])
+
+param <- list(objective = "binary", 
+              learning_rate = 0.0025,
+              num_leaves = 50, 
+              max_depth = 4,
+              min_data_in_leaf = 2000,
+              min_sum_hessian_in_leaf = 125,
+              num_threads = 3)
+
+cv = lgb.cv(param,
+            dlgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            eval = "auc",
+            verbose = 1,
+            early_stopping_rounds = 50)
+
+
+# before missing value imputation: 0.6428838
+# after: 0.641624
 
 
