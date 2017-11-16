@@ -852,5 +852,7 @@ rm(avg, cormat, melted_cormat)
 
 save.image("~/Desktop/Kaggle/data/new_feature_5.RData")
 
+###################################
+# restore the features
 
 
