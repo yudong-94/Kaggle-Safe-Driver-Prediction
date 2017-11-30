@@ -294,9 +294,3 @@ for (n_leaves in c(25, 50)) {
 }
 
 # not good....
-
-
-############################
-# Grid search hyper-parameter tunning for feature set 4
-load("data/new_feature_4.RData")
-
