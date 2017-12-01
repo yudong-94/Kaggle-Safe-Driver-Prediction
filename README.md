@@ -2,7 +2,7 @@
 This repo comtains my work for the Kaggle Competition "Porto Seguro’s Safe Driver Prediction"  
 Link to the competition: https://www.kaggle.com/c/porto-seguro-safe-driver-prediction  
 
-Final achievement (teamwork with Yuvi Tu @NYU): Top 16%, Normalized Gini Coefficient 0.28986 (1st place 0.29698)
+Final achievement (teamwork with Yuvi Tu @NYU): Top 15%, Normalized Gini Coefficient 0.28986 (1st place 0.29698)
 
 ## Summmary
 Porto Seguro is one of Brazil’s largest auto and homeowner insurance companies. Inaccuracies in car insurance company’s claim predictions raise the cost of insurance for good drivers and reduce the price for bad ones. The objective of this competition is to predict the probability that a driver will initiate an auto insurance claim in the next year, given the features of individuals, cars, regions, etc.
