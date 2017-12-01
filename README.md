@@ -1,6 +1,7 @@
 # Kaggle Safe Driver Prediction
 This repo comtains my work for the Kaggle Competition "Porto Seguro’s Safe Driver Prediction"  
 Link to the competition: https://www.kaggle.com/c/porto-seguro-safe-driver-prediction  
+
 Final achievement (teamwork with Yuvi Tu @NYU): Top 16%, Normalized Gini Coefficient 0.28986 (1st place 0.29698)
 
 ## Summmary
@@ -11,7 +12,7 @@ Porto Seguro is one of Brazil’s largest auto and homeowner insurance companies
 ### 1st Part: Data Processing
 The data given by Porto Seguro is anonymous, with 595,212 training observations and 892,816 testing observations. There are 59 variables recorded in [features.xlsx](https://github.com/yudong-94/Kaggle-Safe-Driver-Prediction/tree/master/tracking).  
 For Exploratory Data Analysis, please refer to the terrific public kernel: [Steering Wheel of Fortune - Porto Seguro EDA
-](https://www.kaggle.com/headsortails/steering-wheel-of-fortune-porto-seguro-eda).
+](https://www.kaggle.com/headsortails/steering-wheel-of-fortune-porto-seguro-eda).  
 I did basic data pre-processing and one-hot-encoding and target encoding in [Data Porcessing.R](https://github.com/yudong-94/Kaggle-Safe-Driver-Prediction/blob/master/feature%20engineering/Data%20Processing.R). For all the feature engineering work, you can find them in [feature engineering.R](https://github.com/yudong-94/Kaggle-Safe-Driver-Prediction/blob/master/feature%20engineering/feature%20engineering.R). I have also tried [SVD](https://github.com/yudong-94/Kaggle-Safe-Driver-Prediction/blob/master/feature%20engineering/SVD.R) to detect whethere ther eis obvious clusters exist. Unfortunately, this does not seem to work here.
 
 ### 2nd Part: Modeling & Prediction
